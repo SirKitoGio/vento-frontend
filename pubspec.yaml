@@ -1,0 +1,36 @@
+name: vento_frontend
+description: "A new Flutter project."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.9.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  flutter_riverpod: ^2.5.1
+  http: ^1.6.0
+  flutter_dotenv: ^6.0.1
+  google_fonts: ^8.1.0
+  shimmer: ^3.0.0
+  intl: ^0.20.2
+  phosphor_flutter: ^2.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - .env
+    - assets/images/logo_full.png
+    - assets/images/vento.png
+    - assets/images/dashboard.png
+    - assets/images/vento_search.png
+    - assets/images/icon_inventory.png
