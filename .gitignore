@@ -7,7 +7,7 @@
 .atom/
 .build/
 .buildlog/
-.history
+.historys
 .svn/
 .swiftpm/
 migrate_working_dir/
