@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../theme/app_colors.dart';
@@ -100,23 +102,96 @@ class _AddInventoryPanelState extends ConsumerState<AddInventoryPanel> {
                   children: [
                     Row(
                       children: [
-                        Expanded(child: _buildField("Date...", _dateController)),
+                        Expanded(child: _buildField(
+                          "Date...", _dateController,
+                          readOnly: true,
+                          onTap: () async {
+                            final date = await showDatePicker(
+                              context: context,
+                              initialDate: DateTime.now(),
+                              firstDate: DateTime(2000),
+                              lastDate: DateTime(2100),
+                            );
+                            if (date != null) {
+                              _dateController.text = DateFormat('yyyy-MM-dd').format(date);
+                            }
+                          },
+                        )),
                         const SizedBox(width: 8),
-                        Expanded(child: _buildField("Time in...", _timeController)),
+                        Expanded(child: _buildField(
+                          "Time in...", _timeController,
+                          readOnly: true,
+                          onTap: () async {
+                            final time = await showTimePicker(
+                              context: context,
+                              initialTime: TimeOfDay.now(),
+                              builder: (context, child) {
+                                return Theme(
+                                  data: Theme.of(context).copyWith(
+                                    colorScheme: const ColorScheme.light(
+                                      primary: AppColors.navyMid, // Header background & hand
+                                      onPrimary: Colors.white, // Header text
+                                      onSurface: AppColors.navyMid, // Numbers & Text
+                                      secondary: AppColors.gold, // Selection highlight
+                                    ),
+                                    timePickerTheme: TimePickerThemeData(
+                                      backgroundColor: Colors.white,
+                                      dayPeriodTextColor: AppColors.navyMid,
+                                      dayPeriodColor: AppColors.gold.withValues(alpha: 0.2),
+                                      dialBackgroundColor: AppColors.offWhite,
+                                      dialHandColor: AppColors.navyMid,
+                                      dialTextColor: AppColors.navyMid,
+                                      entryModeIconColor: AppColors.navyMid,
+                                      hourMinuteTextColor: AppColors.navyMid,
+                                      hourMinuteColor: AppColors.gold.withValues(alpha: 0.1),
+                                    ),
+                                    textButtonTheme: TextButtonThemeData(
+                                      style: TextButton.styleFrom(
+                                        foregroundColor: AppColors.navyMid, // OK/Cancel button text
+                                      ),
+                                    ),
+                                  ),
+                                  child: MediaQuery(
+                                    data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+                                    child: child!,
+                                  ),
+                                );
+                              },
+                            );
+                            if (time != null) {
+                              final formattedTime = '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+                              _timeController.text = formattedTime;
+                            }
+                          },
+                        )),
                       ],
                     ),
                     const SizedBox(height: 12),
-                    _buildField("Product Name...", _nameController),
+                    _buildField(
+                      "Product Name...", _nameController,
+                      inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]'))],
+                    ),
                     const SizedBox(height: 12),
                     _buildTypeDropdown(),
                     const SizedBox(height: 12),
-                    _buildField("Inventory Place...", _placeController),
+                    _buildField(
+                      "Inventory Place...", _placeController,
+                      inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9\-]'))],
+                    ),
                     const SizedBox(height: 12),
                     Row(
                       children: [
-                        Expanded(child: _buildField("Unit Price...", _priceController, isNumber: true)),
+                        Expanded(child: _buildField(
+                          "Unit Price...", _priceController,
+                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*'))],
+                        )),
                         const SizedBox(width: 8),
-                        Expanded(child: _buildField("Quantity...", _qtyController, isNumber: true)),
+                        Expanded(child: _buildField(
+                          "Quantity...", _qtyController,
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                        )),
                       ],
                     ),
                     const SizedBox(height: 24),
@@ -149,10 +224,27 @@ class _AddInventoryPanelState extends ConsumerState<AddInventoryPanel> {
     );
   }
 
-  Widget _buildField(String hint, TextEditingController controller, {bool isNumber = false}) {
+  Widget _buildField(
+    String hint, 
+    TextEditingController controller, {
+    TextInputType keyboardType = TextInputType.text,
+    bool readOnly = false,
+    VoidCallback? onTap,
+    List<TextInputFormatter>? inputFormatters,
+    String? Function(String?)? validator,
+  }) {
     return TextFormField(
       controller: controller,
-      keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+      keyboardType: keyboardType,
+      readOnly: readOnly,
+      onTap: onTap,
+      inputFormatters: inputFormatters,
+      validator: validator ?? (value) {
+        if (value == null || value.isEmpty) {
+          return 'Required';
+        }
+        return null;
+      },
       style: const TextStyle(fontSize: 13, color: AppColors.textPrimary),
       decoration: InputDecoration(
         hintText: hint,
@@ -162,13 +254,20 @@ class _AddInventoryPanelState extends ConsumerState<AddInventoryPanel> {
         fillColor: Colors.white,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppColors.borderLight)),
         enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppColors.borderLight)),
+        errorStyle: const TextStyle(fontSize: 10, height: 0.8),
       ),
     );
   }
 
   Widget _buildTypeDropdown() {
     return DropdownButtonFormField<String>(
-      initialValue: _selectedType,
+      value: _selectedType,
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Required';
+        }
+        return null;
+      },
       items: _productTypes.map((type) {
         return DropdownMenuItem<String>(
           value: type['label'],
@@ -188,6 +287,7 @@ class _AddInventoryPanelState extends ConsumerState<AddInventoryPanel> {
         filled: true,
         fillColor: Colors.white,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        errorStyle: const TextStyle(fontSize: 10, height: 0.8),
       ),
     );
   }

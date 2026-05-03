@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../theme/app_colors.dart';
 import '../widgets/mascot_eyes.dart';
 
@@ -14,7 +15,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final FocusNode _userFocus = FocusNode();
   final FocusNode _passFocus = FocusNode();
-  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _rememberMe = false;
   bool _isLoading = false;
@@ -32,7 +33,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void dispose() {
     _userFocus.dispose();
     _passFocus.dispose();
-    _usernameController.dispose();
+    _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -46,25 +47,49 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _handleLogin() async {
+    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please enter both email and password")),
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
-    await Future.delayed(const Duration(seconds: 1));
-    if (mounted) {
-      setState(() => _isLoading = false);
-      Navigator.pushReplacementNamed(context, '/dashboard');
+    
+    try {
+      await Supabase.instance.client.auth.signInWithPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
+
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/dashboard');
+      }
+    } on AuthException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message), backgroundColor: Colors.red),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("An unexpected error occurred"), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final double screenHeight = MediaQuery.of(context).size.height;
-    
     return Scaffold(
       backgroundColor: Colors.white,
       body: MouseRegion(
         onHover: (event) => setState(() => _cursorPosition = event.position),
         child: Row(
           children: [
-            // 1. LEFT SIDE - Mascot Eyes
             Expanded(
               child: Container(
                 color: Colors.white,
@@ -76,149 +101,133 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
             ),
-
-          // 2. RIGHT SIDE - Widenable Login Panel
-          Container(
-            width: 550, // <--- EDIT THIS to change the background width
-            height: double.infinity,
-            color: const Color(0xFFFFD509).withValues(alpha: 0.5),
-            child: SingleChildScrollView(
+            Container(
+              width: 550,
+              height: double.infinity,
+              color: const Color(0xFFFFD509).withValues(alpha: 0.5),
               child: Column(
                 children: [
-                  // Top Yellow Section with Logo
                   Container(
-                    height: 240,
+                    height: 200,
                     width: double.infinity,
-                    padding: const EdgeInsets.all(30),
+                    padding: const EdgeInsets.all(20),
                     child: Center(
                       child: Image.asset(
                         'assets/images/logo_full.png',
-                        height: 180,
+                        height: 150,
                         fit: BoxFit.contain,
                       ),
                     ),
                   ),
-                  // Bottom Blue Section
-                  Container(
-                    width: double.infinity,
-                    constraints: BoxConstraints(minHeight: screenHeight - 240),
-                    decoration: const BoxDecoration(
-                      color: AppColors.loginNavyDark,
-                      borderRadius: BorderRadius.only(topLeft: Radius.circular(200)),
-                    ),
-                    padding: const EdgeInsets.fromLTRB(50, 50, 50, 30),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end, // Aligns the form container to the right
-                      children: [
-                        // FIXED WIDTH FORM CONTAINER
-                        SizedBox(
-                          width: 420, // <--- THE FORM STAYS THIS SIZE
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              const Text(
-                                "Login",
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 48,
-                                  fontWeight: FontWeight.bold,
-                                  fontFamily: 'Montserrat',
+                  Expanded(
+                    child: Container(
+                      width: double.infinity,
+                      decoration: const BoxDecoration(
+                        color: AppColors.loginNavyDark,
+                        borderRadius: BorderRadius.only(topLeft: Radius.circular(200)),
+                      ),
+                      padding: const EdgeInsets.fromLTRB(50, 40, 50, 20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          SizedBox(
+                            width: 380,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                const Text(
+                                  "Login",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 42,
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily: 'Montserrat',
+                                  ),
                                 ),
-                              ),
-                              const Text(
-                                "Welcome back please login to your account",
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 14,
-                                  fontFamily: 'Montserrat',
+                                const Text(
+                                  "Welcome back please login to your account",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 13,
+                                    fontFamily: 'Montserrat',
+                                  ),
+                                  textAlign: TextAlign.right,
                                 ),
-                                textAlign: TextAlign.right,
-                              ),
-                              const SizedBox(height: 40),
-                              
-                              _buildTextField("User Name", _usernameController, _userFocus, false),
-                              const SizedBox(height: 15),
-                              _buildTextField("Password", _passwordController, _passFocus, true),
-                              
-                              const SizedBox(height: 15),
-                              
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Flexible(
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
+                                const SizedBox(height: 30),
+                                _buildTextField("Email Address", _emailController, _userFocus, false),
+                                const SizedBox(height: 12),
+                                _buildTextField("Password", _passwordController, _passFocus, true),
+                                const SizedBox(height: 10),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Row(
                                       children: [
-                                        Checkbox(
-                                          value: _rememberMe,
-                                          onChanged: (val) => setState(() => _rememberMe = val!),
-                                          side: const BorderSide(color: Colors.white, width: 2),
-                                          activeColor: const Color(0xFFFFC400),
-                                        ),
-                                        const Flexible(
-                                          child: Text(
-                                            "Remember Me", 
-                                            style: TextStyle(color: Colors.white, fontSize: 13),
-                                            overflow: TextOverflow.ellipsis,
+                                        SizedBox(
+                                          height: 24,
+                                          width: 24,
+                                          child: Checkbox(
+                                            value: _rememberMe,
+                                            onChanged: (val) => setState(() => _rememberMe = val!),
+                                            side: const BorderSide(color: Colors.white, width: 2),
+                                            activeColor: const Color(0xFFFFC400),
                                           ),
+                                        ),
+                                        const Text("Remember Me", style: TextStyle(color: Colors.white, fontSize: 13)),
+                                      ],
+                                    ),
+                                    TextButton(
+                                      onPressed: () {},
+                                      style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: Size.zero),
+                                      child: Text(
+                                        "Forgot Password",
+                                        style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 13),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 25),
+                                _buildLoginButton(),
+                                const SizedBox(height: 12),
+                                Center(
+                                  child: Text.rich(
+                                    TextSpan(
+                                      text: "Don't have an account? ",
+                                      children: const [
+                                        TextSpan(
+                                          text: "Signup",
+                                          style: TextStyle(fontWeight: FontWeight.bold),
                                         ),
                                       ],
                                     ),
+                                    style: const TextStyle(color: Colors.white, fontSize: 14),
                                   ),
-                                  TextButton(
-                                    onPressed: () {},
-                                    child: Text(
-                                      "Forgot Password",
-                                      style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 13),
-                                    ),
-                                  ),
-                                ],
-                              ),
-
-                              const SizedBox(height: 35),
-                              _buildLoginButton(),
-                              
-                              const SizedBox(height: 15),
-                              Center(
-                                child: Text.rich(
-                                  TextSpan(
-                                    text: "Don't have an account? ",
-                                    children: [
-                                      TextSpan(
-                                        text: "Signup",
-                                        style: const TextStyle(fontWeight: FontWeight.bold),
-                                      ),
-                                    ],
-                                  ),
-                                  style: const TextStyle(color: Colors.white, fontSize: 14),
                                 ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        
-                        const SizedBox(height: 50), 
-                        const Center(
-                          child: Text(
-                            "Created by Jose Rizal University 2nd years of 204I",
-                            style: TextStyle(
-                              color: Colors.white24,
-                              fontSize: 10,
+                              ],
                             ),
                           ),
-                        ),
-                      ],
+                          const Spacer(),
+                          const Center(
+                            child: Text(
+                              "Created by Jose Rizal University 2nd years of 204I",
+                              style: TextStyle(
+                                color: Colors.white24,
+                                fontSize: 10,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   Widget _buildTextField(String hint, TextEditingController controller, FocusNode focusNode, bool isPassword) {
     return ClipRRect(

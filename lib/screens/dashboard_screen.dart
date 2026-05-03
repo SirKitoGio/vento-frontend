@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
+import 'package:fl_chart/fl_chart.dart';
 import '../theme/app_colors.dart';
 import '../providers/inventory_provider.dart';
 import '../models/inventory_item.dart';
@@ -11,14 +11,40 @@ class DashboardScreenContent extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final inventoryState = ref.watch(inventoryProvider);
+
+    if (inventoryState.error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, color: Colors.red, size: 48),
+            const SizedBox(height: 16),
+            Text("Error: ${inventoryState.error}", style: const TextStyle(color: Colors.red)),
+            ElevatedButton(
+              onPressed: () => ref.read(inventoryProvider.notifier).refreshState(),
+              child: const Text("Retry"),
+            )
+          ],
+        ),
+      );
+    }
+
+    if (inventoryState.isLoading && inventoryState.matrix.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
     
-    // Group items by type for Warehouse Overview
-    final Map<String, int> typeCounts = {};
-    for (var row in inventoryState.matrix) {
-      for (var item in row) {
-        if (item != null && item.productType.isNotEmpty) {
-          typeCounts[item.productType] = (typeCounts[item.productType] ?? 0) + 1;
-        }
+    // Calculate stats safely
+    final items = inventoryState.matrix
+        .expand((row) => row)
+        .where((item) => item != null)
+        .cast<InventoryItem>()
+        .toList();
+    
+    // Group by product type for chart
+    Map<String, int> typeCounts = {};
+    for (var item in items) {
+      if (item.productType.isNotEmpty) {
+        typeCounts[item.productType] = (typeCounts[item.productType] ?? 0) + item.quantity;
       }
     }
 
@@ -28,71 +54,17 @@ class DashboardScreenContent extends ConsumerWidget {
         children: [
           _buildTopBar(),
           const SizedBox(height: 30),
+          
           Expanded(
             child: SingleChildScrollView(
               child: Column(
                 children: [
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildOverviewCard(
-                        "WAREHOUSE OVERVIEW", 
-                        flex: 6,
-                        content: typeCounts.isEmpty 
-                          ? const Center(child: Text("No items stored", style: TextStyle(color: Colors.grey)))
-                          : Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 25.0, vertical: 10),
-                              child: GridView.builder(
-                                shrinkWrap: true,
-                                physics: const NeverScrollableScrollPhysics(),
-                                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 2,
-                                  childAspectRatio: 3.5,
-                                  crossAxisSpacing: 15,
-                                  mainAxisSpacing: 10,
-                                ),
-                                itemCount: typeCounts.length,
-                                itemBuilder: (context, index) {
-                                  final type = typeCounts.keys.elementAt(index);
-                                  final count = typeCounts[type];
-                                  return Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 15),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(12),
-                                      boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 2)],
-                                    ),
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Expanded(
-                                          child: Text(
-                                            type, 
-                                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.navyMid),
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                        Text(
-                                          "$count", 
-                                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.gold),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-                      ),
+                      _buildWarehouseOverview(items),
                       const SizedBox(width: 20),
-                      _buildOverviewCard(
-                        "VENTO OVERVIEW", 
-                        flex: 4,
-                        content: _buildBarChart(inventoryState.matrix),
-                        action: IconButton(
-                          onPressed: () => _confirmClear(context, ref),
-                          icon: const Icon(Icons.delete_sweep, color: AppColors.errorRed),
-                          tooltip: "Clear All Items",
-                        ),
-                      ),
+                      _buildVentoOverview(typeCounts),
                     ],
                   ),
                   const SizedBox(height: 30),
@@ -106,240 +78,311 @@ class DashboardScreenContent extends ConsumerWidget {
     );
   }
 
-  Widget _buildDiagramStep(String label, String sublabel, IconData icon) {
-    return Container(
-      width: 200,
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 15),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.gold.withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: AppColors.navyMid, size: 20),
-          const SizedBox(width: 10),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.navyMid)),
-              Text(sublabel, style: const TextStyle(fontSize: 10, color: Colors.grey)),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+  Widget _buildWarehouseOverview(List<InventoryItem> items) {
+    // Calculate total capacity (assuming 100 from backend 10x10 matrix)
+    final totalCapacity = 100;
+    final filledSlots = items.length;
+    final utilizationPercentage = totalCapacity > 0 ? (filledSlots / totalCapacity * 100).round() : 0;
 
-  Widget _buildTopBar() {
-    return SizedBox(
-      height: 60,
-      child: Row(
-        children: [
-          Image.asset("assets/images/vento.png", height: 54, fit: BoxFit.contain),
-          const SizedBox(width: 30),
-          Expanded(
-            child: Container(
-              height: 46,
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 15),
-              child: Row(
-                children: [
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFF90A4AE), // Greyish circle background
-                      shape: BoxShape.circle,
-                    ),
-                    padding: const EdgeInsets.all(6),
-                    child: Image.asset("assets/images/vento_search.png", fit: BoxFit.contain),
-                  ),
-                  const SizedBox(width: 15),
-                  const Expanded(
-                    child: TextField(
-                      style: TextStyle(color: Color(0xFF0F1628), fontSize: 18),
-                      decoration: InputDecoration(
-                        hintText: "Search inventory ...",
-                        hintStyle: TextStyle(color: Color(0xFFD1D1D1), fontSize: 18, fontWeight: FontWeight.w300),
-                        border: InputBorder.none,
-                        isDense: true,
-                        contentPadding: EdgeInsets.zero,
+    return Expanded(
+      flex: 5,
+      child: Container(
+        height: 393,
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.25),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: AppColors.ventoYellow.withOpacity(0.25)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            )
+          ]
+        ),
+        child: Stack(
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildCardHeader("WAREHOUSE OVERVIEW"),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+                    child: GridView.builder(
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 4,
+                        crossAxisSpacing: 15,
+                        mainAxisSpacing: 15,
+                        childAspectRatio: 1,
                       ),
+                      itemCount: 8,
+                      itemBuilder: (context, index) {
+                        // Only show the utilization gear icon in the first slot if there are items
+                        if (index == 0 && items.isNotEmpty) {
+                          return Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(26),
+                              border: Border.all(color: Colors.black.withOpacity(0.11)),
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.settings, size: 45, color: Color(0xFF011D3F)),
+                                const SizedBox(height: 5),
+                                Text(
+                                  "%$utilizationPercentage",
+                                  style: const TextStyle(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.w900,
+                                    color: Color(0xFF011D3F),
+                                    letterSpacing: 1.2,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+                        // Render empty slots
+                        return Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(26),
+                            border: Border.all(color: Colors.black.withOpacity(0.11)),
+                          ),
+                        );
+                      },
                     ),
                   ),
-                  Icon(Icons.search, color: AppColors.ventoYellow.withValues(alpha: 0.8), size: 24),
-                ],
+                ),
+              ],
+            ),
+            Positioned(
+              top: 20,
+              right: 20,
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: const Icon(Icons.warehouse, color: AppColors.navyDark, size: 20),
               ),
             ),
-          ),
-          const SizedBox(width: 30),
-          Image.asset("assets/images/dashboard.png", height: 24, fit: BoxFit.contain),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildOverviewCard(String title, {required int flex, required Widget content, Widget? action}) {
+  Widget _buildVentoOverview(Map<String, int> typeCounts) {
+    // Debugging: Print counts to console to see what's actually in the provider
+    print("Dashboard TypeCounts: $typeCounts");
+
+    // Total items to calculate percentages
+    int total = typeCounts.values.fold(0, (sum, count) => sum + count);
+    print("Dashboard Total Units: $total");
+    
+    double getPercentage(List<String> types) {
+      if (total == 0) return 0;
+      int sum = 0;
+      // Use contains to be more flexible with the names from the dropdown
+      typeCounts.forEach((key, value) {
+        for (var type in types) {
+          if (key.contains(type)) {
+            sum += value;
+          }
+        }
+      });
+      return (sum / total * 100).roundToDouble();
+    }
+
+    final List<Map<String, dynamic>> chartData = [
+      {
+        'name': 'MROS', 
+        'value': getPercentage(['Maintenance & Repair', 'Spare Parts', 'MROS']), 
+        'color': const Color(0xFF011D3F)
+      },
+      {
+        'name': 'Food & Beverages', 
+        'value': getPercentage(['Food & Beverage']), 
+        'color': const Color(0xFF023566)
+      },
+      {
+        'name': 'Retail Merchandise', 
+        'value': getPercentage(['Retail Merchandise']), 
+        'color': const Color(0xFF011D3F)
+      },
+      {
+        'name': 'Finished Goods', 
+        'value': getPercentage(['Finished Goods']), 
+        'color': const Color(0xFF023566)
+      },
+    ];
+
     return Expanded(
-      flex: flex,
+      flex: 5,
       child: Container(
-        height: 350,
+        height: 393,
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.25),
+          color: Colors.white.withOpacity(0.25),
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: AppColors.ventoYellow.withValues(alpha: 0.25)),
+          border: Border.all(color: AppColors.ventoYellow.withOpacity(0.25)),
           boxShadow: [
-            BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 4, offset: const Offset(0, 1)),
-          ],
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            )
+          ]
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 2)],
-                    ),
-                    child: Text(
-                      title,
-                      style: const TextStyle(color: Color(0xFF003666), fontWeight: FontWeight.bold, fontFamily: 'Poppins', fontSize: 24),
+            _buildCardHeader("VENTO OVERVIEW"),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+                child: Container(
+                  padding: const EdgeInsets.fromLTRB(15, 25, 15, 15),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.15),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: BarChart(
+                    BarChartData(
+                      alignment: BarChartAlignment.spaceAround,
+                      maxY: 100,
+                      minY: 0,
+                      barGroups: chartData.asMap().entries.map((entry) {
+                        final index = entry.key;
+                        final data = entry.value;
+                        return BarChartGroupData(
+                          x: index,
+                          barRods: [
+                            BarChartRodData(
+                              toY: data['value'] > 0 ? data['value'] : 0.1, // Small 0.1 to show a sliver if it's zero but present
+                              color: data['color'],
+                              width: 50,
+                              borderRadius: BorderRadius.zero,
+                              backDrawRodData: BackgroundBarChartRodData(
+                                show: true,
+                                toY: 100,
+                                color: const Color(0xFFD2E9FF).withOpacity(0.35),
+                              ),
+                            ),
+                          ],
+                        );
+                      }).toList(),
+                      titlesData: FlTitlesData(
+                        show: true,
+                        leftTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            reservedSize: 30,
+                            getTitlesWidget: (value, meta) {
+                              if (value == 0 || value % 20 != 0) return const SizedBox.shrink();
+                              return Text(
+                                value.toInt().toString(),
+                                style: const TextStyle(fontSize: 10, color: Colors.black87, fontWeight: FontWeight.w300),
+                              );
+                            },
+                          ),
+                        ),
+                        bottomTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            getTitlesWidget: (value, meta) {
+                              final name = chartData[value.toInt()]['name'];
+                              return Padding(
+                                padding: const EdgeInsets.only(top: 8.0),
+                                child: Text(
+                                  name,
+                                  style: const TextStyle(fontSize: 8, color: Colors.black87, fontWeight: FontWeight.w500),
+                                  textAlign: TextAlign.center,
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                        topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                      ),
+                      gridData: FlGridData(
+                        show: true,
+                        drawVerticalLine: false,
+                        horizontalInterval: 20,
+                        getDrawingHorizontalLine: (value) {
+                          return const FlLine(color: Colors.black12, strokeWidth: 1);
+                        },
+                      ),
+                      borderData: FlBorderData(
+                        show: true,
+                        border: const Border(
+                          bottom: BorderSide(color: Colors.black12, width: 1),
+                          left: BorderSide(color: Colors.black12, width: 1),
+                        ),
+                      ),
                     ),
                   ),
-                  if (action != null) action,
-                ],
+                ),
               ),
             ),
-            Expanded(child: content),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildBarChart(List<List<InventoryItem?>> matrix) {
-    final Map<String, int> typeQuantities = {};
-    int maxQty = 10;
-
-    for (var row in matrix) {
-      for (var item in row) {
-        if (item != null) {
-          final type = item.productType.split(' ').first;
-          typeQuantities[type] = (typeQuantities[type] ?? 0) + item.quantity;
-          if (typeQuantities[type]! > maxQty) maxQty = typeQuantities[type]!;
-        }
-      }
-    }
-
-    if (typeQuantities.isEmpty) {
-      return const Center(child: Text("No data for graph", style: TextStyle(color: Colors.grey)));
-    }
-
+  Widget _buildCardHeader(String title) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: typeQuantities.entries.map((e) {
-          final heightFactor = (e.value / maxQty).clamp(0.1, 1.0);
-          return Column(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Text("${e.value}", style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.navyMid)),
-              const SizedBox(height: 4),
-              Container(
-                width: 30,
-                height: 180 * heightFactor,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [AppColors.gold, AppColors.ventoYellow],
-                  ),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-              ),
-              const SizedBox(height: 8),
-              SizedBox(
-                width: 40,
-                child: Text(
-                  e.key, 
-                  style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w600),
-                  textAlign: TextAlign.center,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          );
-        }).toList(),
+      padding: const EdgeInsets.all(20.0),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 2, offset: const Offset(0, 2))],
+        ),
+        child: Text(
+          title,
+          style: const TextStyle(color: Color(0xFF003666), fontWeight: FontWeight.bold, fontFamily: 'Poppins', fontSize: 18),
+        ),
       ),
     );
   }
 
-  void _confirmClear(BuildContext context, WidgetRef ref) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Clear All Items?"),
-        content: const Text("This will permanently remove all items from the warehouse engine."),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
-          ElevatedButton(
-            onPressed: () {
-              ref.read(inventoryProvider.notifier).clearInventory();
-              Navigator.pop(context);
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.errorRed),
-            child: const Text("Clear Everything", style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
-  }
+  Widget _buildRecentLoginTable(List<ActionLog> history) {
+    final recentHistory = history.reversed.take(5).toList();
 
-  Widget _buildRecentLoginTable(List<dynamic> history) {
     return Container(
       width: double.infinity,
       height: 400,
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.1),
+        color: Colors.white.withOpacity(0.1),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.ventoYellow.withValues(alpha: 0.25)),
+        border: Border.all(color: AppColors.ventoYellow.withOpacity(0.25)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(10),
-                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 4)],
-              ),
-              child: Text(
-                "RECENT ACTIVITY",
-                style: TextStyle(
-                  color: const Color(0xFF003666),
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Poppins',
-                  fontSize: 26,
-                  shadows: [Shadow(blurRadius: 4, color: Colors.white.withValues(alpha: 0.8))],
-                ),
-              ),
-            ),
-          ),
+          _buildCardHeader("RECENT INVENTORY"),
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 20),
             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
@@ -347,47 +390,84 @@ class DashboardScreenContent extends ConsumerWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Expanded(flex: 3, child: _buildHeaderText("PRODUCT")),
-                Expanded(flex: 2, child: _buildHeaderText("TYPE")),
-                Expanded(flex: 1, child: _buildHeaderText("QTY")),
-                Expanded(flex: 2, child: _buildHeaderText("PRICE")),
-                Expanded(flex: 2, child: _buildHeaderText("TIME")),
+                _buildHeaderText("PRODUCTS"),
+                _buildHeaderText("PRODUCT TYPE"),
+                _buildHeaderText("UNIT QTY."),
+                _buildHeaderText("UNIT PRICE"),
+                _buildHeaderText("TIME"),
+                _buildHeaderText("STATUS"),
               ],
             ),
           ),
           Expanded(
-            child: history.isEmpty
-                ? const Center(child: Text("No recent activity", style: TextStyle(color: Colors.grey, fontFamily: 'Poppins')))
-                : ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                    itemCount: history.length > 5 ? 5 : history.length,
-                    itemBuilder: (context, index) {
-                      final item = history[index];
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 20.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Expanded(flex: 3, child: Text(item.item, style: const TextStyle(fontWeight: FontWeight.w500))),
-                            Expanded(flex: 2, child: Text(item.productType, style: const TextStyle(color: Colors.grey))),
-                            Expanded(flex: 1, child: Text("${item.qty}")),
-                            Expanded(flex: 2, child: Text("₱${item.price.toStringAsFixed(2)}")),
-                            Expanded(flex: 2, child: Text(DateFormat('HH:mm').format(item.timestamp))),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
+            child: recentHistory.isEmpty 
+              ? const Center(child: Text("No items recently logged", style: TextStyle(color: Colors.grey)))
+              : ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  itemCount: recentHistory.length,
+                  itemBuilder: (context, index) {
+                    final log = recentHistory[index];
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 20),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          _buildCellText(log.item),
+                          _buildCellText(log.productType),
+                          _buildCellText(log.qty.toString()),
+                          _buildCellText("₱${log.price}"),
+                          _buildCellText("12:30 AM"), // Mock Time as missing in ActionLog
+                          _buildCellText(log.action, color: log.action == "INGEST" ? Colors.green : Colors.orange),
+                        ],
+                      ),
+                    );
+                  },
+                ),
           ),
         ],
       ),
     );
   }
 
+  Widget _buildCellText(String text, {Color color = AppColors.navyDark}) {
+    return SizedBox(
+      width: 100,
+      child: Text(text, style: TextStyle(color: color, fontWeight: FontWeight.w500, fontSize: 13), overflow: TextOverflow.ellipsis),
+    );
+  }
+
   Widget _buildHeaderText(String text) {
-    return Text(
-      text,
-      style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, fontSize: 16, color: const Color(0xFF003666), shadows: [Shadow(blurRadius: 2, color: Colors.white)]),
+    return SizedBox(
+      width: 100,
+      child: Text(text, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF003666))),
+    );
+  }
+
+  Widget _buildTopBar() {
+    return Row(
+      children: [
+        Image.asset("assets/images/vento.png", height: 46, fit: BoxFit.contain),
+        const SizedBox(width: 30),
+        Expanded(
+          child: Container(
+            height: 50,
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey.withOpacity(0.2)),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              children: [
+                Image.asset("assets/images/vento_search.png", height: 30, width: 30, fit: BoxFit.contain),
+                const SizedBox(width: 10),
+                const Text("Value...", style: TextStyle(color: Color(0x40AD9696), fontSize: 24)),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(width: 30),
+        Image.asset("assets/images/dashboard.png", height: 24, fit: BoxFit.contain),
+      ],
     );
   }
 }

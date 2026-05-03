@@ -153,6 +153,21 @@ class WarehouseLogisticsContent extends ConsumerWidget {
     );
   }
 
+  IconData _getIconForType(String type) {
+    switch (type) {
+      case 'Physical Inventory': return PhosphorIcons.package(PhosphorIconsStyle.regular);
+      case 'Finished Goods': return PhosphorIcons.checkCircle(PhosphorIconsStyle.regular);
+      case 'Maintenance & Repair': return PhosphorIcons.wrench(PhosphorIconsStyle.regular);
+      case 'Consumable Supplies': return PhosphorIcons.batteryFull(PhosphorIconsStyle.regular);
+      case 'Food & Beverage': return PhosphorIcons.coffee(PhosphorIconsStyle.regular);
+      case 'Retail Merchandise': return PhosphorIcons.tag(PhosphorIconsStyle.regular);
+      case 'Components': return PhosphorIcons.puzzlePiece(PhosphorIconsStyle.regular);
+      case 'Spare Parts': return PhosphorIcons.gear(PhosphorIconsStyle.regular);
+      case 'Custom': return PhosphorIcons.dotsThree(PhosphorIconsStyle.regular);
+      default: return PhosphorIcons.package(PhosphorIconsStyle.regular);
+    }
+  }
+
   Widget _buildStorageGrid(List<List<InventoryItem?>> matrix) {
     return GridView.builder(
       padding: const EdgeInsets.all(16),
@@ -179,7 +194,7 @@ class WarehouseLogisticsContent extends ConsumerWidget {
             ),
             child: Center(
               child: item != null 
-                  ? Text("X", style: TextStyle(color: AppColors.navyMid, fontWeight: FontWeight.bold, fontSize: 12)) 
+                  ? Icon(_getIconForType(item.productType), color: AppColors.navyMid, size: 16) 
                   : null,
             ),
           ),
