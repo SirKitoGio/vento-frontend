@@ -33,14 +33,19 @@ Future<void> main() async {
     'SUPABASE_ANON_KEY'
   );
 
-  if (supabaseUrl.isEmpty || supabaseAnonKey.isEmpty) {
-    debugPrint("CRITICAL ERROR: Supabase credentials missing from .env");
+  if (supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty) {
+    try {
+      await Supabase.initialize(
+        url: supabaseUrl,
+        anonKey: supabaseAnonKey,
+      );
+    } catch (e) {
+      debugPrint("CRITICAL ERROR: Failed to initialize Supabase: $e");
+    }
+  } else {
+    debugPrint("CRITICAL ERROR: Supabase credentials are empty. Please check your Vercel Environment Variables.");
+    debugPrint("URL: '$supabaseUrl', Key: '$supabaseAnonKey'");
   }
-
-  await Supabase.initialize(
-    url: supabaseUrl,
-    anonKey: supabaseAnonKey,
-  );
 
   runApp(
     const ProviderScope(
