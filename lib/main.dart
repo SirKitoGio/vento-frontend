@@ -24,8 +24,14 @@ Future<void> main() async {
     return value;
   }
 
-  final supabaseUrl = cleanEnvValue(dotenv.env['SUPABASE_URL'], 'SUPABASE_URL');
-  final supabaseAnonKey = cleanEnvValue(dotenv.env['SUPABASE_ANON_KEY'], 'SUPABASE_ANON_KEY');
+  final supabaseUrl = cleanEnvValue(
+    dotenv.env['SUPABASE_URL'] ?? const String.fromEnvironment('SUPABASE_URL'), 
+    'SUPABASE_URL'
+  );
+  final supabaseAnonKey = cleanEnvValue(
+    dotenv.env['SUPABASE_ANON_KEY'] ?? const String.fromEnvironment('SUPABASE_ANON_KEY'), 
+    'SUPABASE_ANON_KEY'
+  );
 
   if (supabaseUrl.isEmpty || supabaseAnonKey.isEmpty) {
     debugPrint("CRITICAL ERROR: Supabase credentials missing from .env");
