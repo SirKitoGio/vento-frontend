@@ -45,10 +45,10 @@ class InventoryNotifier extends StateNotifier<InventoryState> {
     state = state.copyWith(isLoading: true, error: null);
     try {
       final data = await _service.getState();
-      
+
       // Parse matrix (assuming it's a 2D array of slots)
       final List<dynamic> matrixData = data['matrix'] ?? [];
-      
+
       // Actually the backend StateHandler returns s.Engine.Matrix.GetState()
       // Let's map it to our 10x10 grid.
       List<List<InventoryItem?>> parsedMatrix = [];
@@ -126,3 +126,5 @@ final inventoryProvider = StateNotifierProvider<InventoryNotifier, InventoryStat
   final service = ref.watch(inventoryServiceProvider);
   return InventoryNotifier(service);
 });
+
+final selectedItemProvider = StateProvider<InventoryItem?>((ref) => null);

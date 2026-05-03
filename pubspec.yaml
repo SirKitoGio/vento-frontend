@@ -29,8 +29,4 @@ flutter:
 
   assets:
     - .env
-    - assets/images/logo_full.png
-    - assets/images/vento.png
-    - assets/images/dashboard.png
-    - assets/images/vento_search.png
-    - assets/images/icon_inventory.png
+    - assets/images/
