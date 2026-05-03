@@ -11,6 +11,8 @@ class DashboardScreenContent extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final inventoryState = ref.watch(inventoryProvider);
+    final size = MediaQuery.of(context).size;
+    final isMobile = size.width < 800;
 
     if (inventoryState.error != null) {
       return Center(
@@ -49,26 +51,31 @@ class DashboardScreenContent extends ConsumerWidget {
     }
 
     return Padding(
-      padding: const EdgeInsets.all(30.0),
+      padding: EdgeInsets.all(isMobile ? 15.0 : 30.0),
       child: Column(
         children: [
-          _buildTopBar(),
-          const SizedBox(height: 30),
+          if (!isMobile) _buildTopBar(),
+          if (!isMobile) const SizedBox(height: 30),
           
           Expanded(
             child: SingleChildScrollView(
               child: Column(
                 children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildWarehouseOverview(items),
-                      const SizedBox(width: 20),
-                      _buildVentoOverview(typeCounts),
-                    ],
-                  ),
+                  if (isMobile) ...[
+                    _buildWarehouseOverview(items, isMobile),
+                    const SizedBox(height: 20),
+                    _buildVentoOverview(typeCounts, isMobile),
+                  ] else 
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildWarehouseOverview(items, isMobile),
+                        const SizedBox(width: 20),
+                        _buildVentoOverview(typeCounts, isMobile),
+                      ],
+                    ),
                   const SizedBox(height: 30),
-                  _buildRecentLoginTable(inventoryState.history),
+                  _buildRecentLoginTable(inventoryState.history, isMobile),
                 ],
               ),
             ),
@@ -78,113 +85,120 @@ class DashboardScreenContent extends ConsumerWidget {
     );
   }
 
-  Widget _buildWarehouseOverview(List<InventoryItem> items) {
+  Widget _buildWarehouseOverview(List<InventoryItem> items, bool isMobile) {
     // Calculate total capacity (assuming 100 from backend 10x10 matrix)
     final totalCapacity = 100;
     final filledSlots = items.length;
     final utilizationPercentage = totalCapacity > 0 ? (filledSlots / totalCapacity * 100).round() : 0;
 
-    return Expanded(
-      flex: 5,
-      child: Container(
-        height: 393,
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.25),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: AppColors.ventoYellow.withOpacity(0.25)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            )
-          ]
-        ),
-        child: Stack(
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildCardHeader("WAREHOUSE OVERVIEW"),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
-                    child: GridView.builder(
-                      physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 4,
-                        crossAxisSpacing: 15,
-                        mainAxisSpacing: 15,
-                        childAspectRatio: 1,
-                      ),
-                      itemCount: 8,
-                      itemBuilder: (context, index) {
-                        // Only show the utilization gear icon in the first slot if there are items
-                        if (index == 0 && items.isNotEmpty) {
-                          return Container(
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(26),
-                              border: Border.all(color: Colors.black.withOpacity(0.11)),
-                            ),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(Icons.settings, size: 45, color: Color(0xFF011D3F)),
-                                const SizedBox(height: 5),
-                                Text(
-                                  "%$utilizationPercentage",
-                                  style: const TextStyle(
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.w900,
-                                    color: Color(0xFF011D3F),
-                                    letterSpacing: 1.2,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        }
-                        // Render empty slots
+    final content = Container(
+      height: 393,
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.25),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.ventoYellow.withOpacity(0.25)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          )
+        ]
+      ),
+      child: Stack(
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildCardHeader("WAREHOUSE OVERVIEW", isMobile),
+              Expanded(
+                child: Padding(
+
+                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+                  child: GridView.builder(
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 4,
+                      crossAxisSpacing: 15,
+                      mainAxisSpacing: 15,
+                      childAspectRatio: 1,
+                    ),
+                    itemCount: 8,
+                    itemBuilder: (context, index) {
+                      // Only show the utilization gear icon in the first slot if there are items
+                      if (index == 0 && items.isNotEmpty) {
                         return Container(
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(26),
                             border: Border.all(color: Colors.black.withOpacity(0.11)),
                           ),
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(Icons.settings, size: 45, color: Color(0xFF011D3F)),
+                                  const SizedBox(height: 5),
+                                  Text(
+                                    "%$utilizationPercentage",
+                                    style: const TextStyle(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.w900,
+                                      color: Color(0xFF011D3F),
+                                      letterSpacing: 1.2,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                         );
-                      },
-                    ),
+                      }
+
+                      // Render empty slots
+                      return Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(26),
+                          border: Border.all(color: Colors.black.withOpacity(0.11)),
+                        ),
+                      );
+                    },
                   ),
                 ),
-              ],
-            ),
-            Positioned(
-              top: 20,
-              right: 20,
-              child: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: const Icon(Icons.warehouse, color: AppColors.navyDark, size: 20),
               ),
+            ],
+          ),
+          Positioned(
+            top: 20,
+            right: 20,
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: const Icon(Icons.warehouse, color: AppColors.navyDark, size: 20),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
+
+    return isMobile ? content : Expanded(flex: 5, child: content);
   }
 
-  Widget _buildVentoOverview(Map<String, int> typeCounts) {
+  Widget _buildVentoOverview(Map<String, int> typeCounts, bool isMobile) {
     // Debugging: Print counts to console to see what's actually in the provider
     print("Dashboard TypeCounts: $typeCounts");
 
@@ -229,132 +243,135 @@ class DashboardScreenContent extends ConsumerWidget {
       },
     ];
 
-    return Expanded(
-      flex: 5,
-      child: Container(
-        height: 393,
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.25),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: AppColors.ventoYellow.withOpacity(0.25)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            )
-          ]
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildCardHeader("VENTO OVERVIEW"),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
-                child: Container(
-                  padding: const EdgeInsets.fromLTRB(15, 25, 15, 15),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.15),
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: BarChart(
-                    BarChartData(
-                      alignment: BarChartAlignment.spaceAround,
-                      maxY: 100,
-                      minY: 0,
-                      barGroups: chartData.asMap().entries.map((entry) {
-                        final index = entry.key;
-                        final data = entry.value;
-                        return BarChartGroupData(
-                          x: index,
-                          barRods: [
-                            BarChartRodData(
-                              toY: data['value'] > 0 ? data['value'] : 0.1, // Small 0.1 to show a sliver if it's zero but present
-                              color: data['color'],
-                              width: 50,
-                              borderRadius: BorderRadius.zero,
-                              backDrawRodData: BackgroundBarChartRodData(
-                                show: true,
-                                toY: 100,
-                                color: const Color(0xFFD2E9FF).withOpacity(0.35),
-                              ),
+    final content = Container(
+      height: 393,
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.25),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.ventoYellow.withOpacity(0.25)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          )
+        ]
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildCardHeader("VENTO OVERVIEW", isMobile),
+          Expanded(
+            child: Padding(
+
+              padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(15, 25, 15, 15),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.15),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: BarChart(
+                  BarChartData(
+                    alignment: BarChartAlignment.spaceAround,
+                    maxY: 100,
+                    minY: 0,
+                    barGroups: chartData.asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final data = entry.value;
+                      return BarChartGroupData(
+                        x: index,
+                        barRods: [
+                          BarChartRodData(
+                            toY: data['value'] > 0 ? data['value'] : 0.1, // Small 0.1 to show a sliver if it's zero but present
+                            color: data['color'],
+                            width: isMobile ? 30 : 50,
+                            borderRadius: BorderRadius.zero,
+                            backDrawRodData: BackgroundBarChartRodData(
+                              show: true,
+                              toY: 100,
+                              color: const Color(0xFFD2E9FF).withOpacity(0.35),
                             ),
-                          ],
-                        );
-                      }).toList(),
-                      titlesData: FlTitlesData(
-                        show: true,
-                        leftTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            reservedSize: 30,
-                            getTitlesWidget: (value, meta) {
-                              if (value == 0 || value % 20 != 0) return const SizedBox.shrink();
-                              return Text(
-                                value.toInt().toString(),
-                                style: const TextStyle(fontSize: 10, color: Colors.black87, fontWeight: FontWeight.w300),
-                              );
-                            },
                           ),
+                        ],
+                      );
+                    }).toList(),
+                    titlesData: FlTitlesData(
+                      show: true,
+                      leftTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 30,
+                          getTitlesWidget: (value, meta) {
+                            if (value == 0 || value % 20 != 0) return const SizedBox.shrink();
+                            return Text(
+                              value.toInt().toString(),
+                              style: const TextStyle(fontSize: 10, color: Colors.black87, fontWeight: FontWeight.w300),
+                            );
+                          },
                         ),
-                        bottomTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            getTitlesWidget: (value, meta) {
-                              final name = chartData[value.toInt()]['name'];
-                              return Padding(
-                                padding: const EdgeInsets.only(top: 8.0),
-                                child: Text(
-                                  name,
-                                  style: const TextStyle(fontSize: 8, color: Colors.black87, fontWeight: FontWeight.w500),
-                                  textAlign: TextAlign.center,
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                        rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                        topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
                       ),
-                      gridData: FlGridData(
-                        show: true,
-                        drawVerticalLine: false,
-                        horizontalInterval: 20,
-                        getDrawingHorizontalLine: (value) {
-                          return const FlLine(color: Colors.black12, strokeWidth: 1);
-                        },
-                      ),
-                      borderData: FlBorderData(
-                        show: true,
-                        border: const Border(
-                          bottom: BorderSide(color: Colors.black12, width: 1),
-                          left: BorderSide(color: Colors.black12, width: 1),
+                      bottomTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          getTitlesWidget: (value, meta) {
+                            final name = chartData[value.toInt()]['name'];
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 8.0),
+                              child: Text(
+                                name,
+                                style: TextStyle(fontSize: isMobile ? 6 : 8, color: Colors.black87, fontWeight: FontWeight.w500),
+                                textAlign: TextAlign.center,
+                              ),
+                            );
+                          },
                         ),
+                      ),
+                      rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                      topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    ),
+                    gridData: FlGridData(
+                      show: true,
+                      drawVerticalLine: false,
+                      horizontalInterval: 20,
+                      getDrawingHorizontalLine: (value) {
+                        return const FlLine(color: Colors.black12, strokeWidth: 1);
+                      },
+                    ),
+                    borderData: FlBorderData(
+                      show: true,
+                      border: const Border(
+                        bottom: BorderSide(color: Colors.black12, width: 1),
+                        left: BorderSide(color: Colors.black12, width: 1),
                       ),
                     ),
                   ),
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
+
+    return isMobile ? content : Expanded(flex: 5, child: content);
   }
 
-  Widget _buildCardHeader(String title) {
+  Widget _buildCardHeader(String title, bool isMobile) {
     return Padding(
       padding: const EdgeInsets.all(20.0),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+        padding: EdgeInsets.symmetric(
+          horizontal: isMobile ? 15 : 25, 
+          vertical: isMobile ? 8 : 12
+        ),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
@@ -362,18 +379,69 @@ class DashboardScreenContent extends ConsumerWidget {
         ),
         child: Text(
           title,
-          style: const TextStyle(color: Color(0xFF003666), fontWeight: FontWeight.bold, fontFamily: 'Poppins', fontSize: 18),
+          style: TextStyle(
+            color: const Color(0xFF003666), 
+            fontWeight: FontWeight.bold, 
+            fontFamily: 'Poppins', 
+            fontSize: isMobile ? 18 : 22
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildRecentLoginTable(List<ActionLog> history) {
+  Widget _buildRecentLoginTable(List<ActionLog> history, bool isMobile) {
     final recentHistory = history.reversed.take(5).toList();
+
+    final tableContent = Column(
+      children: [
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 20),
+          padding: EdgeInsets.symmetric(vertical: isMobile ? 16 : 24, horizontal: 20),
+          decoration: BoxDecoration(color: AppColors.ventoYellow, borderRadius: BorderRadius.circular(10)),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildHeaderText("PRODUCTS", isMobile),
+              _buildHeaderText("PRODUCT TYPE", isMobile),
+              _buildHeaderText("UNIT QTY.", isMobile),
+              _buildHeaderText("UNIT PRICE", isMobile),
+              _buildHeaderText("TIME", isMobile),
+              _buildHeaderText("STATUS", isMobile),
+            ],
+          ),
+        ),
+        Expanded(
+          child: recentHistory.isEmpty 
+            ? const Center(child: Text("No items recently logged", style: TextStyle(color: Colors.grey)))
+            : ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                itemCount: recentHistory.length,
+                itemBuilder: (context, index) {
+                  final log = recentHistory[index];
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 20),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _buildCellText(log.item, isMobile),
+                        _buildCellText(log.productType, isMobile),
+                        _buildCellText(log.qty.toString(), isMobile),
+                        _buildCellText("₱${log.price}", isMobile),
+                        _buildCellText("12:30 AM", isMobile), // Mock Time
+                        _buildCellText(log.action, isMobile, color: log.action == "INGEST" ? Colors.green : Colors.orange),
+                      ],
+                    ),
+                  );
+                },
+              ),
+        ),
+      ],
+    );
 
     return Container(
       width: double.infinity,
-      height: 400,
+      height: 450, // Slightly taller for bigger content
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.1),
         borderRadius: BorderRadius.circular(24),
@@ -382,65 +450,59 @@ class DashboardScreenContent extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildCardHeader("RECENT INVENTORY"),
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 20),
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
-            decoration: BoxDecoration(color: AppColors.ventoYellow, borderRadius: BorderRadius.circular(10)),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _buildHeaderText("PRODUCTS"),
-                _buildHeaderText("PRODUCT TYPE"),
-                _buildHeaderText("UNIT QTY."),
-                _buildHeaderText("UNIT PRICE"),
-                _buildHeaderText("TIME"),
-                _buildHeaderText("STATUS"),
-              ],
-            ),
-          ),
+          _buildCardHeader("RECENT INVENTORY", isMobile),
           Expanded(
-            child: recentHistory.isEmpty 
-              ? const Center(child: Text("No items recently logged", style: TextStyle(color: Colors.grey)))
-              : ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                  itemCount: recentHistory.length,
-                  itemBuilder: (context, index) {
-                    final log = recentHistory[index];
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 20),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          _buildCellText(log.item),
-                          _buildCellText(log.productType),
-                          _buildCellText(log.qty.toString()),
-                          _buildCellText("₱${log.price}"),
-                          _buildCellText("12:30 AM"), // Mock Time as missing in ActionLog
-                          _buildCellText(log.action, color: log.action == "INGEST" ? Colors.green : Colors.orange),
-                        ],
-                      ),
-                    );
-                  },
-                ),
+            child: isMobile 
+              ? SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: SizedBox(
+                    width: 800, // Adjusted for 125px columns + padding
+                    child: tableContent,
+                  ),
+                )
+              : tableContent,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildCellText(String text, {Color color = AppColors.navyDark}) {
-    return SizedBox(
-      width: 100,
-      child: Text(text, style: TextStyle(color: color, fontWeight: FontWeight.w500, fontSize: 13), overflow: TextOverflow.ellipsis),
+  Widget _buildCellText(String text, bool isMobile, {Color color = AppColors.navyDark}) {
+    final content = Padding(
+      padding: const EdgeInsets.only(right: 8.0),
+      child: Text(
+        text, 
+        style: TextStyle(
+          color: color, 
+          fontWeight: FontWeight.w500, 
+          fontSize: isMobile ? 14 : 16
+        ), 
+        overflow: TextOverflow.ellipsis
+      ),
     );
+
+    return isMobile 
+        ? SizedBox(width: 125, child: content)
+        : Expanded(child: content);
   }
 
-  Widget _buildHeaderText(String text) {
-    return SizedBox(
-      width: 100,
-      child: Text(text, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF003666))),
+  Widget _buildHeaderText(String text, bool isMobile) {
+    final content = Padding(
+      padding: const EdgeInsets.only(right: 8.0),
+      child: Text(
+        text, 
+        style: TextStyle(
+          fontWeight: FontWeight.bold, 
+          fontSize: isMobile ? 15 : 18, 
+          color: const Color(0xFF003666)
+        ),
+        overflow: TextOverflow.ellipsis,
+      ),
     );
+
+    return isMobile 
+        ? SizedBox(width: 125, child: content)
+        : Expanded(child: content);
   }
 
   Widget _buildTopBar() {

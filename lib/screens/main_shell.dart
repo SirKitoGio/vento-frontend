@@ -25,11 +25,31 @@ class MainShell extends ConsumerWidget {
         currentScreen = const DashboardScreenContent();
     }
 
+    final isMobile = MediaQuery.of(context).size.width < 800;
+
     return Scaffold(
       backgroundColor: Colors.white,
+      appBar: isMobile ? AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu, color: Color(0xFF001F3D)),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          ),
+        ),
+        title: Image.asset("assets/images/vento.png", height: 30),
+        centerTitle: true,
+      ) : null,
+      drawer: isMobile ? const Drawer(
+        width: 150,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        child: AppSidebar(),
+      ) : null,
       body: Row(
         children: [
-          const AppSidebar(),
+          if (!isMobile) const AppSidebar(),
           Expanded(
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 400),
