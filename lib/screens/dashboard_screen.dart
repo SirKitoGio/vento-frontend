@@ -54,7 +54,7 @@ class DashboardScreenContent extends ConsumerWidget {
       padding: EdgeInsets.all(isMobile ? 15.0 : 30.0),
       child: Column(
         children: [
-          if (!isMobile) _buildTopBar(),
+          if (!isMobile) _buildTopBar(ref),
           if (!isMobile) const SizedBox(height: 30),
           
           Expanded(
@@ -428,8 +428,8 @@ class DashboardScreenContent extends ConsumerWidget {
                         _buildCellText(log.productType, isMobile),
                         _buildCellText(log.qty.toString(), isMobile),
                         _buildCellText("₱${log.price}", isMobile),
-                        _buildCellText("12:30 AM", isMobile), // Mock Time
-                        _buildCellText(log.action, isMobile, color: log.action == "INGEST" ? Colors.green : Colors.orange),
+                        _buildCellText(DateFormat('HH:mm').format(log.timestamp), isMobile),
+                        _buildCellText(log.action, isMobile, color: log.action == "ADD" ? Colors.green : Colors.orange),
                       ],
                     ),
                   );
@@ -505,7 +505,7 @@ class DashboardScreenContent extends ConsumerWidget {
         : Expanded(child: content);
   }
 
-  Widget _buildTopBar() {
+  Widget _buildTopBar(WidgetRef ref) {
     return Row(
       children: [
         Image.asset("assets/images/vento.png", height: 46, fit: BoxFit.contain),
@@ -522,7 +522,17 @@ class DashboardScreenContent extends ConsumerWidget {
               children: [
                 Image.asset("assets/images/vento_search.png", height: 30, width: 30, fit: BoxFit.contain),
                 const SizedBox(width: 10),
-                const Text("Value...", style: TextStyle(color: Color(0x40AD9696), fontSize: 24)),
+                Expanded(
+                  child: TextField(
+                    onChanged: (value) => ref.read(inventoryProvider.notifier).searchItems(value),
+                    style: const TextStyle(color: Color(0xFF0F1628), fontSize: 18),
+                    decoration: const InputDecoration(
+                      hintText: "Search inventory ...",
+                      hintStyle: TextStyle(color: Color(0x40AD9696), fontSize: 24),
+                      border: InputBorder.none,
+                    ),
+                  ),
+                ),
               ],
             ),
           ),

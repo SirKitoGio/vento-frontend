@@ -176,10 +176,11 @@ class WarehouseLogisticsContent extends ConsumerWidget {
                     child: Image.asset("assets/images/vento_search.png", fit: BoxFit.contain),
                   ),
                   const SizedBox(width: 15),
-                  const Expanded(
+                  Expanded(
                     child: TextField(
-                      style: TextStyle(color: Color(0xFF0F1628), fontSize: 18),
-                      decoration: InputDecoration(
+                      style: const TextStyle(color: Color(0xFF0F1628), fontSize: 18),
+                      onChanged: (value) => ref.read(inventoryProvider.notifier).searchItems(value),
+                      decoration: const InputDecoration(
                         hintText: "Search inventory ...",
                         hintStyle: TextStyle(color: Color(0xFFD1D1D1), fontSize: 18, fontWeight: FontWeight.w300),
                         border: InputBorder.none,
@@ -214,35 +215,60 @@ class WarehouseLogisticsContent extends ConsumerWidget {
   }
 
   Widget _buildStorageGrid(List<List<InventoryItem?>> matrix, bool isMobile) {
-    return GridView.builder(
-      padding: const EdgeInsets.all(16),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: isMobile ? 5 : 10,
-        crossAxisSpacing: 8,
-        mainAxisSpacing: 8,
-      ),
-      itemCount: 100,
-      itemBuilder: (context, index) {
-        final row = index ~/ 10;
-        final col = index % 10;
-        final item = (matrix.length > row && matrix[row].length > col) ? matrix[row][col] : null;
+    return Consumer(
+      builder: (context, ref, child) {
+        final inventoryState = ref.watch(inventoryProvider);
+        final searchQuery = inventoryState.searchQuery.toLowerCase();
+        final searchResults = inventoryState.searchResults;
+        final isSearching = searchQuery.isNotEmpty;
 
-        return Tooltip(
-          message: item != null 
-              ? "${item.name}\nQty: ${item.quantity}\nPlace: ${item.inventoryPlace}" 
-              : "Empty Slot",
-          child: Container(
-            decoration: BoxDecoration(
-              color: item != null ? AppColors.gridOccupied : Colors.white,
-              borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: AppColors.borderLight),
-            ),
-            child: Center(
-              child: item != null 
-                  ? Icon(_getIconForType(item.productType), color: AppColors.navyMid, size: 16) 
-                  : null,
-            ),
+        return GridView.builder(
+          padding: const EdgeInsets.all(16),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: isMobile ? 5 : 10,
+            crossAxisSpacing: 8,
+            mainAxisSpacing: 8,
           ),
+          itemCount: 100,
+          itemBuilder: (context, index) {
+            final row = index ~/ 10;
+            final col = index % 10;
+            final item = (matrix.length > row && matrix[row].length > col) ? matrix[row][col] : null;
+
+            bool isMatch = false;
+            if (isSearching && item != null) {
+              isMatch = searchResults.any((res) => res.name == item.name);
+            }
+
+            double opacity = 1.0;
+            if (isSearching) {
+              opacity = isMatch ? 1.0 : 0.3;
+            }
+
+            return Tooltip(
+              message: item != null 
+                  ? "${item.name}\nQty: ${item.quantity}\nPlace: ${item.inventoryPlace}" 
+                  : "Empty Slot",
+              child: Opacity(
+                opacity: opacity,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: item != null ? AppColors.gridOccupied : Colors.white,
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                      color: isMatch ? AppColors.ventoYellow : AppColors.borderLight,
+                      width: isMatch ? 2 : 1,
+                    ),
+                  ),
+                  child: Center(
+                    child: item != null 
+                        ? Icon(_getIconForType(item.productType), color: AppColors.navyMid, size: 16) 
+                        : null,
+                  ),
+                ),
+              ),
+            );
+          },
         );
       },
     );

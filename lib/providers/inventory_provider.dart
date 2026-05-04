@@ -6,6 +6,8 @@ class InventoryState {
   final List<List<InventoryItem?>> matrix;
   final int queueSize;
   final List<ActionLog> history;
+  final List<InventoryItem> searchResults;
+  final String searchQuery;
   final bool isLoading;
   final String? error;
 
@@ -13,6 +15,8 @@ class InventoryState {
     required this.matrix,
     required this.queueSize,
     required this.history,
+    this.searchResults = const [],
+    this.searchQuery = '',
     this.isLoading = false,
     this.error,
   });
@@ -21,6 +25,8 @@ class InventoryState {
     List<List<InventoryItem?>>? matrix,
     int? queueSize,
     List<ActionLog>? history,
+    List<InventoryItem>? searchResults,
+    String? searchQuery,
     bool? isLoading,
     String? error,
   }) {
@@ -28,6 +34,8 @@ class InventoryState {
       matrix: matrix ?? this.matrix,
       queueSize: queueSize ?? this.queueSize,
       history: history ?? this.history,
+      searchResults: searchResults ?? this.searchResults,
+      searchQuery: searchQuery ?? this.searchQuery,
       isLoading: isLoading ?? this.isLoading,
       error: error ?? this.error,
     );
@@ -39,6 +47,21 @@ class InventoryNotifier extends StateNotifier<InventoryState> {
 
   InventoryNotifier(this._service) : super(InventoryState(matrix: [], queueSize: 0, history: [])) {
     refreshState();
+  }
+
+  Future<void> searchItems(String query) async {
+    if (query.isEmpty) {
+      state = state.copyWith(searchQuery: '', searchResults: []);
+      return;
+    }
+
+    state = state.copyWith(searchQuery: query, isLoading: true);
+    try {
+      final results = await _service.search(query);
+      state = state.copyWith(searchResults: results, isLoading: false);
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+    }
   }
 
   Future<void> refreshState() async {
