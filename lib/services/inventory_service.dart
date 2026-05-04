@@ -7,7 +7,7 @@ import '../models/inventory_item.dart';
 class InventoryService {
   final String _baseUrl;
 
-  InventoryService() : _baseUrl = dotenv.env['API_BASE_URL'] ?? 'http://localhost:8080';
+  InventoryService() : _baseUrl = dotenv.env['API_BASE_URL'] ?? 'https://ventopos.duckdns.org';
 
   Map<String, String> get _headers {
     final session = Supabase.instance.client.auth.currentSession;
