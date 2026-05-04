@@ -69,7 +69,7 @@
     },
     {
       "name": "fl_chart",
-      "version": "1.2.0",
+      "version": "0.70.2",
       "dependencies": [
         "equatable",
         "flutter",

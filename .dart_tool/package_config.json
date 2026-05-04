@@ -111,9 +111,9 @@
     },
     {
       "name": "fl_chart",
-      "rootUri": "file:///Users/keithalanspeirs/.pub-cache/hosted/pub.dev/fl_chart-1.2.0",
+      "rootUri": "file:///Users/keithalanspeirs/.pub-cache/hosted/pub.dev/fl_chart-0.70.2",
       "packageUri": "lib/",
-      "languageVersion": "3.6"
+      "languageVersion": "3.2"
     },
     {
       "name": "flutter",
