@@ -9,29 +9,23 @@ import 'screens/main_shell.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
+  // Load .env file only if it exists and is not empty.
+  // In Vercel, we rely on --dart-define instead.
   try {
     await dotenv.load(fileName: ".env");
   } catch (e) {
-    debugPrint("Warning: Could not load .env file: $e");
+    debugPrint("Note: .env file not loaded or empty (this is normal on Vercel): $e");
   }
 
-  String cleanEnvValue(String? value, String key) {
-    if (value == null) return '';
-    // If the value accidentally includes "KEY=" (common issue on some web environments)
-    if (value.startsWith('$key=')) {
-      return value.substring(key.length + 1);
-    }
-    return value;
+  // Priority: String.fromEnvironment (Build Time) > dotenv (Local File)
+  String getEnv(String key) {
+    final value = String.fromEnvironment(key);
+    if (value.isNotEmpty) return value;
+    return dotenv.env[key] ?? '';
   }
 
-  final supabaseUrl = cleanEnvValue(
-    dotenv.env['SUPABASE_URL'] ?? const String.fromEnvironment('SUPABASE_URL'), 
-    'SUPABASE_URL'
-  );
-  final supabaseAnonKey = cleanEnvValue(
-    dotenv.env['SUPABASE_ANON_KEY'] ?? const String.fromEnvironment('SUPABASE_ANON_KEY'), 
-    'SUPABASE_ANON_KEY'
-  );
+  final supabaseUrl = getEnv('SUPABASE_URL');
+  final supabaseAnonKey = getEnv('SUPABASE_ANON_KEY');
 
   if (supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty) {
     try {
@@ -43,8 +37,8 @@ Future<void> main() async {
       debugPrint("CRITICAL ERROR: Failed to initialize Supabase: $e");
     }
   } else {
-    debugPrint("CRITICAL ERROR: Supabase credentials are empty. Please check your Vercel Environment Variables.");
-    debugPrint("URL: '$supabaseUrl', Key: '$supabaseAnonKey'");
+    debugPrint("CRITICAL ERROR: Supabase credentials are missing.");
+    debugPrint("Please ensure --dart-define=SUPABASE_URL=... is set in your Vercel build command.");
   }
 
   runApp(
