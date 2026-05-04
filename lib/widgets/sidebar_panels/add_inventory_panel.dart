@@ -54,6 +54,7 @@ class _AddInventoryPanelState extends ConsumerState<AddInventoryPanel> {
         price: double.tryParse(_priceController.text) ?? 0.0,
         productType: _selectedType!,
         inventoryPlace: _placeController.text,
+        date: _dateController.text,
       );
 
       await ref.read(inventoryProvider.notifier).ingestItem(item);

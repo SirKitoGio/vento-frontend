@@ -359,6 +359,7 @@ class WarehouseLogisticsContent extends ConsumerWidget {
   }
 
   Widget _buildHistoryPanel(List<ActionLog> history) {
+    final reversedHistory = history.reversed.toList();
     return Container(
       decoration: BoxDecoration(
         color: AppColors.panelBg,
@@ -383,13 +384,13 @@ class WarehouseLogisticsContent extends ConsumerWidget {
             ),
           ),
           Expanded(
-            child: history.isEmpty
+            child: reversedHistory.isEmpty
                 ? const Center(child: Text("No history...", style: TextStyle(color: Colors.grey, fontSize: 12)))
                 : ListView.builder(
                     padding: const EdgeInsets.all(8),
-                    itemCount: history.length,
+                    itemCount: reversedHistory.length,
                     itemBuilder: (context, index) {
-                      final log = history[index];
+                      final log = reversedHistory[index];
                       return Container(
                         margin: const EdgeInsets.only(bottom: 4),
                         padding: const EdgeInsets.all(8),

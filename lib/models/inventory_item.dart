@@ -4,6 +4,7 @@ class InventoryItem {
   final double price;
   final String productType;
   final String inventoryPlace;
+  final String date;
   final DateTime? startTime;
   final int? x;
   final int? y;
@@ -14,6 +15,7 @@ class InventoryItem {
     required this.price,
     required this.productType,
     required this.inventoryPlace,
+    required this.date,
     this.startTime,
     this.x,
     this.y,
@@ -26,6 +28,7 @@ class InventoryItem {
       price: (json['price'] ?? 0.0).toDouble(),
       productType: json['product_type'] ?? '',
       inventoryPlace: json['inventory_place'] ?? '',
+      date: json['date'] ?? '',
       startTime: json['start_time'] != null ? DateTime.tryParse(json['start_time']) : null,
       x: json['x'],
       y: json['y'],
@@ -39,6 +42,7 @@ class InventoryItem {
       'price': price,
       'product_type': productType,
       'inventory_place': inventoryPlace,
+      'date': date,
       'action': 'ADD',
     };
   }
@@ -49,6 +53,7 @@ class ActionLog {
   final int qty;
   final double price;
   final String productType;
+  final String date;
   final String action;
   final int x;
   final int y;
@@ -59,6 +64,7 @@ class ActionLog {
     required this.qty,
     required this.price,
     required this.productType,
+    required this.date,
     required this.action,
     required this.x,
     required this.y,
@@ -71,6 +77,7 @@ class ActionLog {
       qty: json['qty'] ?? 0,
       price: (json['price'] ?? 0.0).toDouble(),
       productType: json['product_type'] ?? '',
+      date: json['date'] ?? '',
       action: json['action'] ?? '',
       x: json['x'] ?? 0,
       y: json['y'] ?? 0,

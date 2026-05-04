@@ -76,7 +76,7 @@ class DashboardScreenContent extends ConsumerWidget {
                       ],
                     ),
                   const SizedBox(height: 30),
-                  _buildRecentLoginTable(inventoryState.history, isMobile),
+                  _buildRecentLoginTable(inventoryState, isMobile),
                 ],
               ),
             ),
@@ -391,8 +391,28 @@ class DashboardScreenContent extends ConsumerWidget {
     );
   }
 
-  Widget _buildRecentLoginTable(List<ActionLog> history, bool isMobile) {
-    final recentHistory = history.reversed.take(5).toList();
+  Widget _buildRecentLoginTable(InventoryState state, bool isMobile) {
+    final searchQuery = state.searchQuery.toLowerCase();
+    
+    // Extract active items from matrix
+    List<InventoryItem> activeItems = state.matrix
+        .expand((row) => row)
+        .where((item) => item != null)
+        .cast<InventoryItem>()
+        .toList();
+
+    // Sort by startTime descending (newest first)
+    activeItems.sort((a, b) => (b.startTime ?? DateTime.now()).compareTo(a.startTime ?? DateTime.now()));
+
+    // Filter based on search query
+    if (searchQuery.isNotEmpty) {
+      activeItems = activeItems.where((item) => 
+        item.name.toLowerCase().contains(searchQuery) || 
+        item.productType.toLowerCase().contains(searchQuery)
+      ).toList();
+    } else {
+      activeItems = activeItems.take(5).toList();
+    }
 
     final tableContent = Column(
       children: [
@@ -407,30 +427,30 @@ class DashboardScreenContent extends ConsumerWidget {
               _buildHeaderText("PRODUCT TYPE", isMobile),
               _buildHeaderText("UNIT QTY.", isMobile),
               _buildHeaderText("UNIT PRICE", isMobile),
-              _buildHeaderText("TIME", isMobile),
-              _buildHeaderText("STATUS", isMobile),
+              _buildHeaderText("PLACE", isMobile),
+              _buildHeaderText("DATE", isMobile),
             ],
           ),
         ),
         Expanded(
-          child: recentHistory.isEmpty 
-            ? const Center(child: Text("No items recently logged", style: TextStyle(color: Colors.grey)))
+          child: activeItems.isEmpty 
+            ? Center(child: Text(searchQuery.isEmpty ? "No active inventory items" : "No matches found", style: const TextStyle(color: Colors.grey)))
             : ListView.builder(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                itemCount: recentHistory.length,
+                itemCount: activeItems.length,
                 itemBuilder: (context, index) {
-                  final log = recentHistory[index];
+                  final item = activeItems[index];
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 20),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        _buildCellText(log.item, isMobile),
-                        _buildCellText(log.productType, isMobile),
-                        _buildCellText(log.qty.toString(), isMobile),
-                        _buildCellText("₱${log.price}", isMobile),
-                        _buildCellText(DateFormat('HH:mm').format(log.timestamp), isMobile),
-                        _buildCellText(log.action, isMobile, color: log.action == "ADD" ? Colors.green : Colors.orange),
+                        _buildCellText(item.name, isMobile),
+                        _buildCellText(item.productType, isMobile),
+                        _buildCellText(item.quantity.toString(), isMobile),
+                        _buildCellText("₱${item.price}", isMobile),
+                        _buildCellText(item.inventoryPlace, isMobile),
+                        _buildCellText(item.date, isMobile),
                       ],
                     ),
                   );
@@ -451,7 +471,7 @@ class DashboardScreenContent extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildCardHeader("RECENT INVENTORY", isMobile),
+          _buildCardHeader(searchQuery.isEmpty ? "RECENT INVENTORY" : "SEARCH RESULTS", isMobile),
           Expanded(
             child: isMobile 
               ? SingleChildScrollView(
