@@ -6,7 +6,7 @@
       "destination": "/index.html"
     }
   ],
-  "installCommand": "if [ ! -d \"flutter\" ]; then git clone https://github.com/flutter/flutter.git -b stable; fi && cd flutter && git checkout 3.41.9 && cd .. && ./flutter/bin/flutter pub get",
+  "installCommand": "if [ ! -d \"flutter\" ]; then git clone https://github.com/flutter/flutter.git -b stable; fi && cd flutter && git checkout 3.41.9 && cd .. && touch .env && ./flutter/bin/flutter pub get",
   "buildCommand": "./flutter/bin/flutter build web --release --dart-define=API_BASE_URL=$API_BASE_URL --dart-define=SUPABASE_URL=$SUPABASE_URL --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY",
   "outputDirectory": "build/web"
 }
