@@ -12,8 +12,13 @@ class InventoryService {
       : (dotenv.env['API_BASE_URL'] ?? 'https://ventopos.duckdns.org');
 
   Map<String, String> get _headers {
-    final session = Supabase.instance.client.auth.currentSession;
-    final token = session?.accessToken ?? '';
+    String token = '';
+    try {
+      final session = Supabase.instance.client.auth.currentSession;
+      token = session?.accessToken ?? '';
+    } catch (_) {
+      // Supabase not initialized yet
+    }
     return {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer $token',

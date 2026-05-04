@@ -69,11 +69,10 @@
     },
     {
       "name": "fl_chart",
-      "version": "0.70.2",
+      "version": "0.68.0",
       "dependencies": [
         "equatable",
-        "flutter",
-        "vector_math"
+        "flutter"
       ]
     },
     {
@@ -101,7 +100,7 @@
     },
     {
       "name": "google_fonts",
-      "version": "8.1.0",
+      "version": "6.3.3",
       "dependencies": [
         "crypto",
         "flutter",

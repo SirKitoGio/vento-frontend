@@ -111,7 +111,7 @@
     },
     {
       "name": "fl_chart",
-      "rootUri": "file:///Users/keithalanspeirs/.pub-cache/hosted/pub.dev/fl_chart-0.70.2",
+      "rootUri": "file:///Users/keithalanspeirs/.pub-cache/hosted/pub.dev/fl_chart-0.68.0",
       "packageUri": "lib/",
       "languageVersion": "3.2"
     },
@@ -159,7 +159,7 @@
     },
     {
       "name": "google_fonts",
-      "rootUri": "file:///Users/keithalanspeirs/.pub-cache/hosted/pub.dev/google_fonts-8.1.0",
+      "rootUri": "file:///Users/keithalanspeirs/.pub-cache/hosted/pub.dev/google_fonts-6.3.3",
       "packageUri": "lib/",
       "languageVersion": "3.9"
     },
