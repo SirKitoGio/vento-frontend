@@ -177,16 +177,20 @@ class WarehouseLogisticsContent extends ConsumerWidget {
                   ),
                   const SizedBox(width: 15),
                   Expanded(
-                    child: TextField(
-                      style: const TextStyle(color: Color(0xFF0F1628), fontSize: 18),
-                      onChanged: (value) => ref.read(inventoryProvider.notifier).searchItems(value),
-                      decoration: const InputDecoration(
-                        hintText: "Search inventory ...",
-                        hintStyle: TextStyle(color: Color(0xFFD1D1D1), fontSize: 18, fontWeight: FontWeight.w300),
-                        border: InputBorder.none,
-                        isDense: true,
-                        contentPadding: EdgeInsets.zero,
-                      ),
+                    child: Consumer(
+                      builder: (context, ref, child) {
+                        return TextField(
+                          style: const TextStyle(color: Color(0xFF0F1628), fontSize: 18),
+                          onChanged: (value) => ref.read(inventoryProvider.notifier).searchItems(value),
+                          decoration: const InputDecoration(
+                            hintText: "Search inventory ...",
+                            hintStyle: TextStyle(color: Color(0xFFD1D1D1), fontSize: 18, fontWeight: FontWeight.w300),
+                            border: InputBorder.none,
+                            isDense: true,
+                            contentPadding: EdgeInsets.zero,
+                          ),
+                        );
+                      },
                     ),
                   ),
                   Icon(Icons.search, color: AppColors.ventoYellow.withValues(alpha: 0.8), size: 24),
