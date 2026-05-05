@@ -384,7 +384,7 @@ class WarehouseLogisticsContent extends ConsumerWidget {
                 Icon(PhosphorIcons.clipboardText(), color: Colors.white, size: 24),
                 const SizedBox(width: 12),
                 const Text(
-                  "Inventory History",
+                  "Inventory Stack",
                   style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w800),
                 ),
               ],
