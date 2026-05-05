@@ -205,16 +205,16 @@ class WarehouseLogisticsContent extends ConsumerWidget {
 
   IconData _getIconForType(String type) {
     switch (type) {
-      case 'Physical Inventory': return PhosphorIcons.package;
-      case 'Finished Goods': return PhosphorIcons.checkCircle;
-      case 'Maintenance & Repair': return PhosphorIcons.wrench;
-      case 'Consumable Supplies': return PhosphorIcons.batteryFull;
-      case 'Food & Beverage': return PhosphorIcons.coffee;
-      case 'Retail Merchandise': return PhosphorIcons.tag;
-      case 'Components': return PhosphorIcons.puzzlePiece;
-      case 'Spare Parts': return PhosphorIcons.gear;
-      case 'Custom': return PhosphorIcons.dotsThree;
-      default: return PhosphorIcons.package;
+      case 'Physical Inventory': return PhosphorIcons.package();
+      case 'Finished Goods': return PhosphorIcons.checkCircle();
+      case 'Maintenance & Repair': return PhosphorIcons.wrench();
+      case 'Consumable Supplies': return PhosphorIcons.batteryFull();
+      case 'Food & Beverage': return PhosphorIcons.coffee();
+      case 'Retail Merchandise': return PhosphorIcons.tag();
+      case 'Components': return PhosphorIcons.puzzlePiece();
+      case 'Spare Parts': return PhosphorIcons.gear();
+      case 'Custom': return PhosphorIcons.dotsThree();
+      default: return PhosphorIcons.package();
     }
   }
 
@@ -466,10 +466,6 @@ class WarehouseLogisticsContent extends ConsumerWidget {
           ),
         ],
       ),
-    );
-  }
-}
-  ),
     );
   }
 }
