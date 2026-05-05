@@ -307,36 +307,36 @@ class WarehouseLogisticsContent extends ConsumerWidget {
             if (isMobile) ...[
               SizedBox(
                 width: 120,
-                child: Text(item.name, style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.textPrimary), overflow: TextOverflow.ellipsis),
+                child: Text(item.name, style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.textPrimary), overflow: TextOverflow.ellipsis),
               ),
               SizedBox(
                 width: 80,
-                child: Text("${item.quantity} units", style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                child: Text("${item.quantity} units", style: const TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w700)),
               ),
               SizedBox(
                 width: 100,
-                child: Text("₱${item.price.toStringAsFixed(2)}", style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                child: Text("₱${item.price.toStringAsFixed(2)}", style: const TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w700)),
               ),
               SizedBox(
                 width: 60,
-                child: Text(item.startTime != null ? DateFormat('MM/dd').format(item.startTime!) : "-", style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                child: Text(item.startTime != null ? DateFormat('MM/dd').format(item.startTime!) : "-", style: const TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w700)),
               ),
             ] else ...[
               Expanded(
                 flex: 3,
-                child: Text(item.name, style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                child: Text(item.name, style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
               ),
               Expanded(
                 flex: 2,
-                child: Text("${item.quantity} units", style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                child: Text("${item.quantity} units", style: const TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w700)),
               ),
               Expanded(
                 flex: 2,
-                child: Text("₱${item.price.toStringAsFixed(2)}", style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                child: Text("₱${item.price.toStringAsFixed(2)}", style: const TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w700)),
               ),
               Expanded(
                 flex: 2,
-                child: Text(item.startTime != null ? DateFormat('MM/dd').format(item.startTime!) : "-", style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                child: Text(item.startTime != null ? DateFormat('MM/dd').format(item.startTime!) : "-", style: const TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w700)),
               ),
             ],
           ],
@@ -410,10 +410,10 @@ class WarehouseLogisticsContent extends ConsumerWidget {
                       final log = reversedHistory[index];
                       // Normalize action string to handle different backend formats (ADD, add, ADD (Undo))
                       final actionStr = log.action.toUpperCase();
-                      final isAdd = actionStr.contains("ADD");
                       
-                      final bgColor = isAdd ? const Color(0xFFBCE3AD) : const Color(0xFFE0B0AE);
-                      final borderColor = isAdd ? const Color(0xFF9CC98B) : const Color(0xFFC99593);
+                      // Changed from ternary to constant green as requested by user
+                      const bgColor = Color(0xFFBCE3AD);
+                      const borderColor = Color(0xFF9CC98B);
 
                       return Container(
                         margin: const EdgeInsets.only(bottom: 8),
@@ -437,11 +437,11 @@ class WarehouseLogisticsContent extends ConsumerWidget {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              "${isAdd ? 'Admitted Time' : 'Omitted time'} ${DateFormat('M/d/yyyy HH:mm').format(log.timestamp)}",
+                              "Admitted Time ${DateFormat('M/d/yyyy HH:mm').format(log.timestamp)}",
                               style: const TextStyle(
                                 fontSize: 13,
                                 color: Colors.black,
-                                fontWeight: FontWeight.w400,
+                                fontWeight: FontWeight.w700, // Bold as requested
                               ),
                             ),
                           ],

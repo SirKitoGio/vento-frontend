@@ -46,7 +46,7 @@ Use `Google Fonts: Inter` throughout. Define in `AppTextStyles`.
 |---|---|---|---|---|
 | `logoText` | 22px | W700 | `gold` | "VENTÖ" wordmark |
 | `sectionHeading` | 14px | W700 | `textPrimary` | "WAREHOUSE LOGISTICS", section labels |
-| `panelHeading` | 13px | W600 | `textOnDark` | "Add Inventory", "Inventory History" |
+| `panelHeading` | 20px | W800 | `textOnDark` | "Add Inventory", "Inventory History" |
 | `listItemName` | 14px | W600 | `textPrimary` | Item names in list view |
 | `listItemMeta` | 13px | W400 | `textSecondary` | Quantity, price, date, time |
 | `inputLabel` | 12px | W400 | `textSecondary` | Placeholder text in form fields |
@@ -483,12 +483,16 @@ class ApiException implements Exception {
 dependencies:
   flutter:
     sdk: flutter
+  cupertino_icons: ^1.0.8
   flutter_riverpod: ^2.5.1
-  http: ^1.2.1
-  flutter_dotenv: ^5.1.0
-  google_fonts: ^6.2.1
+  http: ^1.6.0
+  flutter_dotenv: ^6.0.1
+  google_fonts: ^6.0.0
   shimmer: ^3.0.0
-  intl: ^0.19.0              # Date/time formatting
+  intl: ^0.20.2
+  phosphor_flutter: ^2.1.0
+  fl_chart: ^0.68.0
+  supabase_flutter: ^2.12.4
 
 dev_dependencies:
   flutter_test:

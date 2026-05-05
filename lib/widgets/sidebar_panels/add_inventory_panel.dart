@@ -219,7 +219,7 @@ class _AddInventoryPanelState extends ConsumerState<AddInventoryPanel> {
         children: const [
           Icon(Icons.assignment_outlined, color: Colors.white, size: 16),
           SizedBox(width: 8),
-          Text("Add Inventory", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
+          Text("Add Inventory", style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w800)),
         ],
       ),
     );

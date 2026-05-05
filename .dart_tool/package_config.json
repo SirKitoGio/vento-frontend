@@ -117,7 +117,7 @@
     },
     {
       "name": "flutter",
-      "rootUri": "file:///Users/keithalanspeirs/flutter/packages/flutter",
+      "rootUri": "file:///Volumes/Sandisk%20Extreme%20SSD/development/flutter/packages/flutter",
       "packageUri": "lib/",
       "languageVersion": "3.8"
     },
@@ -141,13 +141,13 @@
     },
     {
       "name": "flutter_test",
-      "rootUri": "file:///Users/keithalanspeirs/flutter/packages/flutter_test",
+      "rootUri": "file:///Volumes/Sandisk%20Extreme%20SSD/development/flutter/packages/flutter_test",
       "packageUri": "lib/",
       "languageVersion": "3.8"
     },
     {
       "name": "flutter_web_plugins",
-      "rootUri": "file:///Users/keithalanspeirs/flutter/packages/flutter_web_plugins",
+      "rootUri": "file:///Volumes/Sandisk%20Extreme%20SSD/development/flutter/packages/flutter_web_plugins",
       "packageUri": "lib/",
       "languageVersion": "3.8"
     },
@@ -255,9 +255,9 @@
     },
     {
       "name": "meta",
-      "rootUri": "file:///Users/keithalanspeirs/.pub-cache/hosted/pub.dev/meta-1.17.0",
+      "rootUri": "file:///Users/keithalanspeirs/.pub-cache/hosted/pub.dev/meta-1.16.0",
       "packageUri": "lib/",
-      "languageVersion": "3.5"
+      "languageVersion": "2.12"
     },
     {
       "name": "mime",
@@ -417,7 +417,7 @@
     },
     {
       "name": "sky_engine",
-      "rootUri": "file:///Users/keithalanspeirs/flutter/bin/cache/pkg/sky_engine",
+      "rootUri": "file:///Volumes/Sandisk%20Extreme%20SSD/development/flutter/bin/cache/pkg/sky_engine",
       "packageUri": "lib/",
       "languageVersion": "3.8"
     },
@@ -477,7 +477,7 @@
     },
     {
       "name": "test_api",
-      "rootUri": "file:///Users/keithalanspeirs/.pub-cache/hosted/pub.dev/test_api-0.7.7",
+      "rootUri": "file:///Users/keithalanspeirs/.pub-cache/hosted/pub.dev/test_api-0.7.6",
       "packageUri": "lib/",
       "languageVersion": "3.5"
     },
@@ -585,8 +585,8 @@
     }
   ],
   "generator": "pub",
-  "generatorVersion": "3.10.8",
-  "flutterRoot": "file:///Users/keithalanspeirs/flutter",
-  "flutterVersion": "3.38.9",
+  "generatorVersion": "3.9.2",
+  "flutterRoot": "file:///Volumes/Sandisk%20Extreme%20SSD/development/flutter",
+  "flutterVersion": "3.35.6",
   "pubCache": "file:///Users/keithalanspeirs/.pub-cache"
 }
