@@ -291,7 +291,7 @@ class DashboardScreenContent extends ConsumerWidget {
                         x: index,
                         barRods: [
                           BarChartRodData(
-                            toY: data['value'] > 0 ? data['value'] : 0.1, // Small 0.1 to show a sliver if it's zero but present
+                            toY: data['value'].toDouble(),
                             color: data['color'],
                             width: isMobile ? 30 : 50,
                             borderRadius: BorderRadius.zero,

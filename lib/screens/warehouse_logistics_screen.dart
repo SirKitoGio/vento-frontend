@@ -359,6 +359,7 @@ class WarehouseLogisticsContent extends ConsumerWidget {
   }
 
   Widget _buildHistoryPanel(List<ActionLog> history) {
+    // Backend returns ascending (oldest first). We reverse to show newest history items at the top.
     final reversedHistory = history.reversed.toList();
     const int minItems = 6;
     final int displayCount = reversedHistory.length > minItems ? reversedHistory.length : minItems;
