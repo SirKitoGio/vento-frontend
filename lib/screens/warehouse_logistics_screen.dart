@@ -381,7 +381,7 @@ class WarehouseLogisticsContent extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               children: [
-                Icon(PhosphorIcons.clipboardText, color: Colors.white, size: 24),
+                Icon(PhosphorIcons.clipboardText(), color: Colors.white, size: 24),
                 const SizedBox(width: 12),
                 const Text(
                   "Inventory History",
@@ -466,6 +466,10 @@ class WarehouseLogisticsContent extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+}
+  ),
     );
   }
 }
