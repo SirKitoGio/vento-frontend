@@ -205,16 +205,16 @@ class WarehouseLogisticsContent extends ConsumerWidget {
 
   IconData _getIconForType(String type) {
     switch (type) {
-      case 'Physical Inventory': return PhosphorIcons.package(PhosphorIconsStyle.regular);
-      case 'Finished Goods': return PhosphorIcons.checkCircle(PhosphorIconsStyle.regular);
-      case 'Maintenance & Repair': return PhosphorIcons.wrench(PhosphorIconsStyle.regular);
-      case 'Consumable Supplies': return PhosphorIcons.batteryFull(PhosphorIconsStyle.regular);
-      case 'Food & Beverage': return PhosphorIcons.coffee(PhosphorIconsStyle.regular);
-      case 'Retail Merchandise': return PhosphorIcons.tag(PhosphorIconsStyle.regular);
-      case 'Components': return PhosphorIcons.puzzlePiece(PhosphorIconsStyle.regular);
-      case 'Spare Parts': return PhosphorIcons.gear(PhosphorIconsStyle.regular);
-      case 'Custom': return PhosphorIcons.dotsThree(PhosphorIconsStyle.regular);
-      default: return PhosphorIcons.package(PhosphorIconsStyle.regular);
+      case 'Physical Inventory': return PhosphorIcons.package;
+      case 'Finished Goods': return PhosphorIcons.checkCircle;
+      case 'Maintenance & Repair': return PhosphorIcons.wrench;
+      case 'Consumable Supplies': return PhosphorIcons.batteryFull;
+      case 'Food & Beverage': return PhosphorIcons.coffee;
+      case 'Retail Merchandise': return PhosphorIcons.tag;
+      case 'Components': return PhosphorIcons.puzzlePiece;
+      case 'Spare Parts': return PhosphorIcons.gear;
+      case 'Custom': return PhosphorIcons.dotsThree;
+      default: return PhosphorIcons.package;
     }
   }
 
@@ -381,7 +381,7 @@ class WarehouseLogisticsContent extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               children: [
-                Icon(PhosphorIcons.clipboardText(), color: Colors.white, size: 24),
+                Icon(PhosphorIcons.clipboardText, color: Colors.white, size: 24),
                 const SizedBox(width: 12),
                 const Text(
                   "Inventory History",
@@ -408,7 +408,10 @@ class WarehouseLogisticsContent extends ConsumerWidget {
                   itemBuilder: (context, index) {
                     if (index < reversedHistory.length) {
                       final log = reversedHistory[index];
-                      final isAdd = log.action == "ADD";
+                      // Normalize action string to handle different backend formats (ADD, add, ADD (Undo))
+                      final actionStr = log.action.toUpperCase();
+                      final isAdd = actionStr.contains("ADD");
+                      
                       final bgColor = isAdd ? const Color(0xFFBCE3AD) : const Color(0xFFE0B0AE);
                       final borderColor = isAdd ? const Color(0xFF9CC98B) : const Color(0xFFC99593);
 

@@ -35,18 +35,18 @@ class AppSidebar extends ConsumerWidget {
             const SizedBox(height: 50),
             
             // 0. HOME
-            _buildSidebarIcon(ref, context, 0, PhosphorIcons.house(PhosphorIconsStyle.regular), isActive: selectedIndex == 0),
+            _buildSidebarIcon(ref, context, 0, PhosphorIcons.house, isActive: selectedIndex == 0),
             
             // 1. INVENTORY
-            _buildSidebarIcon(ref, context, 1, PhosphorIcons.package(PhosphorIconsStyle.regular), isActive: selectedIndex == 1),
+            _buildSidebarIcon(ref, context, 1, PhosphorIcons.package, isActive: selectedIndex == 1),
             
             const Spacer(),
             
             // 4. PROFILE
-            _buildSidebarIcon(ref, context, 4, PhosphorIcons.user(PhosphorIconsStyle.regular), isActive: selectedIndex == 4, isLarge: true),
+            _buildSidebarIcon(ref, context, 4, PhosphorIcons.user, isActive: selectedIndex == 4, isLarge: true),
             
             // 5. LOGOUT
-            _buildSidebarIcon(ref, context, 5, PhosphorIcons.signOut(PhosphorIconsStyle.regular), isActive: selectedIndex == 5),
+            _buildSidebarIcon(ref, context, 5, PhosphorIcons.signOut, isActive: selectedIndex == 5),
             
             const SizedBox(height: 40),
           ],

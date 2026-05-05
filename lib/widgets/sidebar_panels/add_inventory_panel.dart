@@ -27,15 +27,15 @@ class _AddInventoryPanelState extends ConsumerState<AddInventoryPanel> {
   bool _isSubmitting = false;
 
   final List<Map<String, dynamic>> _productTypes = [
-    {'label': 'Physical Inventory', 'icon': PhosphorIcons.package(PhosphorIconsStyle.regular)},
-    {'label': 'Finished Goods', 'icon': PhosphorIcons.checkCircle(PhosphorIconsStyle.regular)},
-    {'label': 'Maintenance & Repair', 'icon': PhosphorIcons.wrench(PhosphorIconsStyle.regular)},
-    {'label': 'Consumable Supplies', 'icon': PhosphorIcons.batteryFull(PhosphorIconsStyle.regular)},
-    {'label': 'Food & Beverage', 'icon': PhosphorIcons.coffee(PhosphorIconsStyle.regular)},
-    {'label': 'Retail Merchandise', 'icon': PhosphorIcons.tag(PhosphorIconsStyle.regular)},
-    {'label': 'Components', 'icon': PhosphorIcons.puzzlePiece(PhosphorIconsStyle.regular)},
-    {'label': 'Spare Parts', 'icon': PhosphorIcons.gear(PhosphorIconsStyle.regular)},
-    {'label': 'Custom', 'icon': PhosphorIcons.dotsThree(PhosphorIconsStyle.regular)},
+    {'label': 'Physical Inventory', 'icon': PhosphorIcons.package},
+    {'label': 'Finished Goods', 'icon': PhosphorIcons.checkCircle},
+    {'label': 'Maintenance & Repair', 'icon': PhosphorIcons.wrench},
+    {'label': 'Consumable Supplies', 'icon': PhosphorIcons.batteryFull},
+    {'label': 'Food & Beverage', 'icon': PhosphorIcons.coffee},
+    {'label': 'Retail Merchandise', 'icon': PhosphorIcons.tag},
+    {'label': 'Components', 'icon': PhosphorIcons.puzzlePiece},
+    {'label': 'Spare Parts', 'icon': PhosphorIcons.gear},
+    {'label': 'Custom', 'icon': PhosphorIcons.dotsThree},
   ];
 
   Future<void> _submitToBackend() async {
