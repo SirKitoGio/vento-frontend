@@ -360,6 +360,9 @@ class WarehouseLogisticsContent extends ConsumerWidget {
 
   Widget _buildHistoryPanel(List<ActionLog> history) {
     final reversedHistory = history.reversed.toList();
+    const int minItems = 6;
+    final int displayCount = reversedHistory.length > minItems ? reversedHistory.length : minItems;
+
     return Container(
       decoration: BoxDecoration(
         color: AppColors.panelBg,
@@ -369,50 +372,93 @@ class WarehouseLogisticsContent extends ConsumerWidget {
       child: Column(
         children: [
           Container(
-            height: 40,
+            height: 50,
             decoration: const BoxDecoration(
               color: AppColors.navyMid,
               borderRadius: BorderRadius.only(topLeft: Radius.circular(13), topRight: Radius.circular(13)),
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               children: [
-                Icon(PhosphorIcons.clockCounterClockwise(), color: Colors.white, size: 16),
-                const SizedBox(width: 8),
-                const Text("Inventory History", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
+                Icon(PhosphorIcons.clipboardText(), color: Colors.white, size: 24),
+                const SizedBox(width: 12),
+                const Text(
+                  "Inventory History",
+                  style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w800),
+                ),
               ],
             ),
           ),
           Expanded(
-            child: reversedHistory.isEmpty
-                ? const Center(child: Text("No history...", style: TextStyle(color: Colors.grey, fontSize: 12)))
-                : ListView.builder(
-                    padding: const EdgeInsets.all(8),
-                    itemCount: reversedHistory.length,
-                    itemBuilder: (context, index) {
+            child: Theme(
+              data: ThemeData(
+                scrollbarTheme: ScrollbarThemeData(
+                  thumbColor: WidgetStateProperty.all(Colors.grey[700]),
+                  thickness: WidgetStateProperty.all(8),
+                  radius: const Radius.circular(8),
+                  thumbVisibility: WidgetStateProperty.all(true),
+                ),
+              ),
+              child: Scrollbar(
+                thumbVisibility: true,
+                child: ListView.builder(
+                  padding: const EdgeInsets.all(12),
+                  itemCount: displayCount,
+                  itemBuilder: (context, index) {
+                    if (index < reversedHistory.length) {
                       final log = reversedHistory[index];
+                      final isAdd = log.action == "ADD";
+                      final bgColor = isAdd ? const Color(0xFFBCE3AD) : const Color(0xFFE0B0AE);
+                      final borderColor = isAdd ? const Color(0xFF9CC98B) : const Color(0xFFC99593);
+
                       return Container(
-                        margin: const EdgeInsets.only(bottom: 4),
-                        padding: const EdgeInsets.all(8),
+                        margin: const EdgeInsets.only(bottom: 8),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: AppColors.borderLight),
+                          color: bgColor,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: borderColor),
                         ),
-                        child: Row(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Icon(log.action == "ADD" ? Icons.add_circle_outline : Icons.remove_circle_outline, 
-                                 size: 14, color: log.action == "ADD" ? Colors.green : Colors.red),
-                            const SizedBox(width: 8),
-                            Expanded(child: Text(log.item, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500))),
-                            Text("${log.qty}", style: TextStyle(fontSize: 11, color: Colors.grey[600])),
-                            const SizedBox(width: 8),
-                            Text(DateFormat('HH:mm').format(log.timestamp), style: TextStyle(fontSize: 10, color: Colors.grey)),
+                            Text(
+                              log.item,
+                              style: const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w900,
+                                color: Colors.black,
+                                height: 1.1,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              "${isAdd ? 'Admitted Time' : 'Omitted time'} ${DateFormat('M/d/yyyy HH:mm').format(log.timestamp)}",
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: Colors.black,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
                           ],
                         ),
                       );
-                    },
-                  ),
+                    } else {
+                      // Placeholder
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        height: 70, // Roughly matching the height of actual items
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE5E5E5),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: const Color(0xFFD0D0D0)),
+                        ),
+                      );
+                    }
+                  },
+                ),
+              ),
+            ),
           ),
         ],
       ),
