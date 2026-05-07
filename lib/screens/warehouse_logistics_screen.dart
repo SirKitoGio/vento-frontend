@@ -410,10 +410,11 @@ class WarehouseLogisticsContent extends ConsumerWidget {
                       final log = reversedHistory[index];
                       // Normalize action string to handle different backend formats (ADD, add, ADD (Undo))
                       final actionStr = log.action.toUpperCase();
+                      final isRemove = actionStr == 'REMOVE';
                       
-                      // Changed from ternary to constant green as requested by user
-                      const bgColor = Color(0xFFBCE3AD);
-                      const borderColor = Color(0xFF9CC98B);
+                      // Green for ADD, Red for REMOVE
+                      final bgColor = isRemove ? const Color(0xFFFFD1D1) : const Color(0xFFBCE3AD);
+                      final borderColor = isRemove ? const Color(0xFFE24B4A) : const Color(0xFF9CC98B);
 
                       return Container(
                         margin: const EdgeInsets.only(bottom: 8),
@@ -437,7 +438,7 @@ class WarehouseLogisticsContent extends ConsumerWidget {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              "Admitted Time ${DateFormat('M/d/yyyy HH:mm').format(log.timestamp)}",
+                              "${isRemove ? 'Omitted' : 'Admitted'} Time ${DateFormat('M/d/yyyy HH:mm').format(log.timestamp)}",
                               style: const TextStyle(
                                 fontSize: 13,
                                 color: Colors.black,
